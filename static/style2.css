@@ -1,0 +1,39 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background: url("./888.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    /* 讓 body 占滿整個視窗高度 */
+    background-color: #f0f0f0;
+    /* 背景顏色 */
+}
+
+#btn {
+    background-color: transparent;
+    width: 30%;
+    height: 50px;
+    border-radius: 40px;
+    font-size: 1em;
+    color: #fff;
+    cursor: pointer;
+    background: linear-gradient(90deg, black, #6511e3);
+    border: none;
+    outline: none;
+    box-shadow: 0 8px 10px rgb(0, 0, 0, .5);
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

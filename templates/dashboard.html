@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>數獨解答器</title>
+    <link rel="stylesheet" href="/static/style1.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1 font color="#fff">
+            <font color='purple'>數獨解答器</font>
+        </h1>
+        <form id="sudoku-form">
+            <div class="grid">
+                <!-- 渲染 9x9 的數獨格子 -->
+                {% for i in range(9) %}
+                {% for j in range(9) %}
+                <input type="text" maxlength="1" class="cell" id="cell-{{i}}-{{j}}"
+                    onkeypress="return isNumberKey(event)" placeholder="">
+                {% endfor %}
+                {% endfor %}
+            </div>
+            <button type="button" id="solve-button"><b>解答</b></button>
+        </form>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        // 限制输入为数字 1-9
+        function isNumberKey(evt) {
+            const charCode = evt.which || evt.keyCode;
+            if (charCode < 49 || charCode > 57) {
+                return false; // 禁止非数字键输入
+            }
+            return true;
+        }
+
+        // 点击按钮处理数独解答
+        document.getElementById('solve-button').addEventListener('click', async () => {
+            const board = [];
+            for (let i = 0; i < 9; i++) {
+                const row = [];
+                for (let j = 0; j < 9; j++) {
+                    const cell = document.getElementById(`cell-${i}-${j}`);
+                    const value = cell.value;
+                    row.push(value === "" ? 0 : parseInt(value));
+                    // 移除之前的解答样式（如果有）
+                    cell.classList.remove("solved-cell");
+                }
+                board.push(row);
+            }
+
+            // 向后端发送数据
+            const response = await fetch('/solve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ board }),
+            });
+            const result = await response.json();
+
+            // 显示结果
+            if (result.solved) {
+                for (let i = 0; i < 9; i++) {
+                    for (let j = 0; j < 9; j++) {
+                        const cell = document.getElementById(`cell-${i}-${j}`);
+                        if (board[i][j] === 0) {
+                            // 如果原来是空格，填充后将其标记为解答数字
+                            cell.value = result.board[i][j];
+                            cell.classList.add("solved-cell"); // 添加红色样式
+                        }
+                    }
+                }
+                // document.getElementById('message').innerText = "解答完成!";
+            } else {
+                document.getElementById('message').innerText = result.message || "無法解答!~";
+            }
+        });
+    </script>
+
+</body>
+
+</html>
