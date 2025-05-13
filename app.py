@@ -1,90 +1,95 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session
-import json
+from flask import Flask, render_template, request, redirect, url_for, session, flash
+import sqlite3, os, hashlib
 
 app = Flask(__name__)
-users_data = {}
+app.secret_key = "your_secret_key_here"
+
+DB_NAME = "users.db"
 
 
-def is_valid(board, row, col, num):
-    for i in range(9):
-        if board[row][i] == num or board[i][col] == num:
-            return False
-    start_row, start_col = 3 * (row // 3), 3 * (col // 3)
-    for i in range(3):
-        for j in range(3):
-            if board[start_row + i][start_col + j] == num:
-                return False
-    return True
+def init_db():
+    if not os.path.exists(DB_NAME):
+        conn = sqlite3.connect(DB_NAME)
+        c = conn.cursor()
+        c.execute(
+            """CREATE TABLE users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        username TEXT UNIQUE NOT NULL,
+                        password TEXT NOT NULL)"""
+        )
+        conn.commit()
+        conn.close()
 
 
-def solve_sudoku(board):
-    for row in range(9):
-        for col in range(9):
-            if board[row][col] == 0:  # 找到未填的格子
-                for num in range(1, 10):
-                    if is_valid(board, row, col, num):
-                        board[row][col] = num
-                        if solve_sudoku(board):
-                            return True
-                        board[row][col] = 0  # 回溯
-                return False
-    return True
-
-
-def is_valid(board, row, col, num):
-    for i in range(9):
-        if board[row][i] == num or board[i][col] == num:
-            return False
-    start_row, start_col = 3 * (row // 3), 3 * (col // 3)
-    for i in range(3):
-        for j in range(3):
-            if board[start_row + i][start_col + j] == num:
-                return False
-    return True
-
-
-def solve(board):
-    for row in range(9):
-        for col in range(9):
-            if board[row][col] == 0:
-                for num in range(1, 10):
-                    if is_valid(board, row, col, num):
-                        board[row][col] = num
-                        if solve(board):
-                            return True
-                        board[row][col] = 0
-                return False
-    return True
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
 
 
 @app.route("/")
-def index():
+def home():
     return render_template("index.html")
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = hash_password(request.form["password"])
+        try:
+            conn = sqlite3.connect(DB_NAME)
+            c = conn.cursor()
+            c.execute(
+                "INSERT INTO users (username, password) VALUES (?, ?)",
+                (username, password),
+            )
+            conn.commit()
+            conn.close()
+            flash("註冊成功，請登入！")
+            return render_template("index.html")
+        except sqlite3.IntegrityError:
+            flash("使用者名稱已存在")
+    return render_template("index.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = hash_password(request.form["password"])
+
+        conn = sqlite3.connect(DB_NAME)
+        c = conn.cursor()
+        c.execute(
+            "SELECT * FROM users WHERE username = ? AND password = ?",
+            (username, password),
+        )
+        user = c.fetchone()
+        conn.close()
+
+        if user:
+            session["username"] = username
+            return redirect(url_for("dashboard"))
+        else:
+            flash("帳號或密碼錯誤")
+            return redirect(url_for("home"))  # 導回首頁，再顯示錯誤訊息
+
+    return redirect(url_for("home"))
 
 
 @app.route("/dashboard")
 def dashboard():
-    return render_template("dashboard.html")
+    if "username" not in session:
+        return render_template("index.html")
+    return render_template("dashboard.html", username=session["username"])
 
 
-@app.route("/solve", methods=["POST"])
-def solve():
-    data = request.get_json()
-    board = data.get("board")
-
-    if not board or len(board) != 9 or any(len(row) != 9 for row in board):
-        return jsonify({"error": "Invalid board format. Must be a 9x9 grid."}), 400
-
-    if solve_sudoku(board):
-        return jsonify({"solved": True, "board": board})
-    else:
-        return jsonify({"solved": False, "message": "No solution exists."})
-
-
-@app.route("/password")
-def password():
-    return render_template("password.html")
+@app.route("/logout")
+def logout():
+    session.pop("username", None)
+    flash("已登出")
+    return render_template("index.html")
 
 
 if __name__ == "__main__":
+    init_db()
     app.run(debug=True)

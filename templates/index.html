@@ -6,27 +6,27 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <link rel="stylesheet" href="static/style.css">
-    <title>登錄與註冊頁面</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>學習系統</title>
 </head>
 
 <body>
-    <div id="toastContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1000; display: none;">
-    </div>
-
 
     <div class="wrapper">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul class="flash" id="flash">
+            {% for message in messages %}
+            <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
         <nav class="nav">
-            <div class="nav-logo">
-                <!-- <p>WELCOME .</p> -->
-            </div>
             <div class="nav-button">
-                <button class="btn white-btn" id="loginBtn" onclick="login()">Log In</button>
+                <button class="btn white-btn" id="loginBtn" onclick="login()">Sign In</button>
                 <button class="btn" id="registerBtn" onclick="register()">Sign Up</button>
             </div>
-            <!-- <div class="nav-menu-btn">
-                <i class="bx bx-menu" onclick="myMenuFunction()"></i>
-            </div> -->
         </nav>
 
         <!----------------------------- Form box ----------------------------------->
@@ -36,45 +36,61 @@
 
             <div class="login-container" id="login">
                 <div class="top">
-                    <header>登 入</header>
+                    <header>Log in</header>
                 </div>
-                <div class="input-box">
-                    <input type="email" id="loginEmail" class="input-field" placeholder="Email" required>
-                    <i class="bx bx-user"></i>
-                </div>
-                <div class="input-box">
-                    <input type="password" id="loginPassword" class="input-field" placeholder="Password">
-                    <i class="bx bx-lock-alt"></i>
-                </div>
-                <div class="input-box">
-                    <input type="submit" class="submit" value="Log In" onclick="loginSubmit()">
-                </div>
+
+                <form action="{{ url_for('login') }}" method="post">
+                    <div class="input-box">
+                        <input type="text" name="username" class="input-field" placeholder="Account" required>
+                        <i class="bx bx-user"></i>
+                    </div>
+                    <div class="input-box">
+                        <input type="password" name="password" class="input-field" placeholder="Password" required>
+                        <i class="bx bx-lock-alt"></i>
+                    </div>
+                    <div class="input-box">
+                        <input type="submit" class="submit" value="Sign In">
+                    </div>
+                </form>
+
             </div>
 
             <!------------------- registration form -------------------------->
-
             <div class="register-container" id="register">
                 <div class="top">
-                    <header>註 冊</header>
+                    <header>Sign Up</header>
                 </div>
-                <div class="input-box">
-                    <input type="email" id="registerEmail" class="input-field" placeholder="Email" required>
-                    <i class="bx bx-envelope"></i>
-                </div>
-                <div class="input-box">
-                    <input type="password" id="registerPassword" class="input-field" placeholder="Password">
-                    <i class="bx bx-lock-alt"></i>
-                </div>
-                <div class="input-box">
-                    <input type="submit" class="submit" value="Register" onclick="registerSubmit()">
-                </div>
+                <form action="{{ url_for('register') }}" method="post">
+                    <div class="input-box">
+                        <input type="text" name="username" class="input-field" placeholder="Account" required>
+                        <i class="bx bx-envelope"></i>
+                    </div>
+                    <div class="input-box">
+                        <input type="password" name="password" class="input-field" placeholder="Password" required>
+                        <i class="bx bx-lock-alt"></i>
+                    </div>
+                    <div class="input-box">
+                        <input type="submit" class="submit" value="Register">
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
-    <script>
-        var usersMap = new Map();
 
+    <script>
+        window.onload = function () {
+            const flash = document.getElementById("flash");
+            if (flash) {
+                setTimeout(() => {
+                    flash.classList.add("fade-out");
+                    // Optional: 完全移除 DOM
+                    setTimeout(() => {
+                        flash.remove();
+                    }, 1000);
+                }, 1000); // 3 秒後淡出
+            }
+        };
         function myMenuFunction() {
             var i = document.getElementById("navMenu");
 
@@ -85,101 +101,35 @@
             }
         }
 
+    </script>
+
+    <script>
+
+        var a = document.getElementById("loginBtn");
+        var b = document.getElementById("registerBtn");
+        var x = document.getElementById("login");
+        var y = document.getElementById("register");
+
         function login() {
-            document.getElementById("login").style.left = "4px";
-            document.getElementById("register").style.right = "-520px";
-            document.getElementById("loginBtn").className += " white-btn";
-            document.getElementById("registerBtn").className = "btn";
-            document.getElementById("login").style.opacity = 1;
-            document.getElementById("register").style.opacity = 0;
+            x.style.left = "4px";
+            y.style.right = "-520px";
+            a.className += " white-btn";
+            b.className = "btn";
+            x.style.opacity = 1;
+            y.style.opacity = 0;
         }
 
         function register() {
-            document.getElementById("login").style.left = "-510px";
-            document.getElementById("register").style.right = "5px";
-            document.getElementById("loginBtn").className = "btn";
-            document.getElementById("registerBtn").className += " white-btn";
-            document.getElementById("login").style.opacity = 0;
-            document.getElementById("register").style.opacity = 1;
-        }
-        function showToast(message, duration = 4000) {
-            const toastContainer = document.getElementById("toastContainer");
-
-            // 建立新的 Toast
-            const toast = document.createElement("div");
-            toast.className = "toast";
-            toast.textContent = message;
-
-            // 添加到容器中
-            toastContainer.appendChild(toast);
-            toastContainer.style.display = "block";
-
-            // 自動隱藏和移除
-            setTimeout(() => {
-                toast.remove();
-                if (!toastContainer.hasChildNodes()) {
-                    toastContainer.style.display = "none";
-                }
-            }, duration);
-        }
-
-        function isValidEmail(email) {
-            // 这是一个简单的电子邮件格式验证正则表达式
-            const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-            return emailPattern.test(email);
-        }
-        function registerSubmit() {
-            const email = document.getElementById("registerEmail").value;
-            const password = document.getElementById("registerPassword").value;
-            if (!isValidEmail(email)) {
-                showToast("請輸入有效的 Email 地址！");
-                return;
-            }
-            if (email && password) {
-                const storedUsersMap = new Map(JSON.parse(localStorage.getItem('usersMap')));
-
-                if (storedUsersMap.has(email)) {
-                    // 如果 email 已經存在
-                    // alert("此 Email 已經被註冊過了，請使用其他 Email!");
-                    showToast("此 Email 已經被註冊過了，請使用其他 Email!");
-                } else {
-                    usersMap.set(email, password);
-                    localStorage.setItem('usersMap', JSON.stringify([...usersMap])); // Save to localStorage
-                    showToast("註冊成功!");
-                    register();
-                }
-            } else {
-                showToast("請填寫完整的 Email 和 Password!");
-            }
-        }
-
-        function loginSubmit() {
-            const email = document.getElementById("loginEmail").value;
-            const password = document.getElementById("loginPassword").value;
-            if (!isValidEmail(email)) {
-                showToast("請輸入有效的 Email 地址！");
-                return;
-            }
-            const storedUsersMap = new Map(JSON.parse(localStorage.getItem('usersMap')));
-
-            if (storedUsersMap && storedUsersMap.has(email) && storedUsersMap.get(email) === password) {
-                showToast("登入成功!");
-                setTimeout(() => {
-                    window.location.href = 'dashboard'; // 延遲 1 秒後跳轉
-                }, 1000); // 延遲 1000 毫秒 (1 秒)
-            } else {
-                showToast("帳號或密碼有錯!");
-            }
-        }
-
-        window.onload = function () {
-            const storedUsersMap = new Map(JSON.parse(localStorage.getItem('usersMap')));
-            if (storedUsersMap) {
-                usersMap = storedUsersMap;  // Load saved users from localStorage
-            }
+            x.style.left = "-510px";
+            y.style.right = "5px";
+            a.className = "btn";
+            b.className += " white-btn";
+            x.style.opacity = 0;
+            y.style.opacity = 1;
         }
 
     </script>
+
 </body>
 
 </html>
