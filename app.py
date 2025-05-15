@@ -27,7 +27,7 @@ def hash_password(password):
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template("home.html")
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -45,10 +45,10 @@ def register():
             conn.commit()
             conn.close()
             flash("註冊成功，請登入！")
-            return render_template("index.html")
+            return render_template("home.html")
         except sqlite3.IntegrityError:
             flash("使用者名稱已存在")
-    return render_template("index.html")
+    return render_template("home.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -79,7 +79,7 @@ def login():
 @app.route("/dashboard")
 def dashboard():
     if "username" not in session:
-        return render_template("index.html")
+        return render_template("home.html")
     return render_template("dashboard.html", username=session["username"])
 
 
@@ -87,7 +87,7 @@ def dashboard():
 def logout():
     session.pop("username", None)
     flash("已登出")
-    return render_template("index.html")
+    return render_template("home.html")
 
 
 if __name__ == "__main__":
